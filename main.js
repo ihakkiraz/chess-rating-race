@@ -32,12 +32,7 @@ const layerText = g.append("g").attr("class", "layer-text");
 
 const x = d3.scaleLinear().range([0, innerW]);
 const y = d3.scaleBand().range([0, innerH]).padding(0.12);
-const color = d3.scaleOrdinal([
-  ...d3.schemeSet3,
-  ...d3.schemePaired,
-  ...d3.schemeSet1,
-  ...d3.schemeAccent
-]);
+const color = d3.scaleOrdinal(d3.schemePaired);
 
 // helpers
 function parseRow(d) {
@@ -68,33 +63,33 @@ function frameData(year) {
     .slice(0, state.topN);
 }
 
-// to normalize names for champions matching
-const norm = s => (s || "")
-  .toLowerCase()
-  .replace(/[.,]/g, "")
-  .replace(/\s+/g, " ")
-  .trim();
-
-const toFullName = s => {
-  const n = norm(s);
-  if (n.includes(",")) {
-    const [last, first] = n.split(",").map(t => t.trim());
-    return `${first} ${last}`.trim();
+function parseDateRanges(dateStr) {
+  if (!dateStr) return [];
+  const ranges = [];
+  const parts = dateStr.split(",").map(s => s.trim());
+  
+  for (const part of parts) {
+    const match = part.match(/(\d{4})-(\d{2,4})/);
+    if (match) {
+      const startYear = parseInt(match[1]);
+      let endYear = parseInt(match[2]);
+      // Handle 2-digit years 
+      if (endYear < 100) {
+        endYear = Math.floor(startYear / 100) * 100 + endYear;
+      }
+      ranges.push({ start: startYear, end: endYear });
+    }
   }
-  return n;
-};
+  return ranges;
+}
 
-const lastName = s => {
-  const parts = norm(s).split(" ");
-  return parts[parts.length - 1] || "";
-};
+// Map of year -> reigning world champion name
+let CHAMPION_BY_YEAR = new Map();
 
-let CHAMPIONS_FULL = new Set();
-let CHAMPIONS_LAST = new Set();
-const isChampion = (name) => {
-  const full = toFullName(name);
-  if (CHAMPIONS_FULL.has(full)) return true;
-  return CHAMPIONS_LAST.has(lastName(name));
+const isChampion = (name, year) => {
+  const championName = CHAMPION_BY_YEAR.get(year);
+  if (!championName) return false;
+  return name === championName;
 };
 
 function render(year) {
@@ -130,16 +125,21 @@ function render(year) {
     .style("fill", "#FFD700")
     .style("font-weight", 700);
 
-  ticks.select("path.crown").remove();
-  const crownPath = "M2 12 L6 6 L10 12 L14 8 L18 12 L18 16 L2 16 Z"; // simple crown shape
-  ticks.filter(d => isChampion(d))
-    .append("path")
-    .attr("class", "crown")
-    .attr("d", crownPath)
-    .attr("fill", "#FFD700")
-    .attr("stroke", "#7A5C00")
-    .attr("stroke-width", 0.8)
-    .attr("transform", "translate(-26,5) scale(0.7)");
+  ticks.select("text.crown").remove();
+  ticks.filter(d => isChampion(d, year))
+    .each(function() {
+      const tick = d3.select(this);
+      const textElement = tick.select("text");
+      const textWidth = textElement.node().getBBox().width;
+      
+      tick.append("text")
+        .attr("class", "crown")
+        .attr("x", -textWidth - 15)
+        .attr("y", 0)
+        .attr("dy", "0.32em")
+        .style("font-size", "16px")
+        .text("👑");
+    });
 
   const bars = layerBars.selectAll(".bar").data(data, d => d.player);
 
@@ -153,7 +153,8 @@ function render(year) {
     .attr("y", d => y(d.player))
     .attr("height", y.bandwidth())
     .attr("width", d => x(d.rating))
-    .attr("fill", d => color(d.player));
+    .attr("fill", d => color(d.player))
+    .style("opacity", 1);
 
   const prev = new Map(bars.data().map(d => [d.player, d])); // previous data keyed by player
   layerBars.selectAll(".bar").data(data, d => d.player)
@@ -164,6 +165,7 @@ function render(year) {
     .attr("height", y.bandwidth())
     .attr("width", d => x(prev.get(d.player)?.rating ?? minX))
     .attr("fill", d => color(d.player))
+    .style("opacity", 1)
     .transition(t)
     .attr("width", d => x(d.rating));
 
@@ -241,8 +243,17 @@ Promise.all([
   d3.csv("data/chess_ratings.csv", parseRow),
   d3.csv("data/world_champions.csv", d => ({ player: d.Player, dates: d.Dates }))
 ]).then(([rows, champs]) => {
-  CHAMPIONS_FULL = new Set(champs.map(d => toFullName(d.player)));
-  CHAMPIONS_LAST = new Set(champs.map(d => lastName(d.player)));
+  // Build year-to-champion map
+  CHAMPION_BY_YEAR = new Map();
+  for (const champ of champs) {
+    const name = champ.player;
+    const ranges = parseDateRanges(champ.dates);
+    for (const range of ranges) {
+      for (let year = range.start; year <= range.end; year++) {
+        CHAMPION_BY_YEAR.set(year, name);
+      }
+    }
+  }
 
   const clean = rows.filter(d =>
     d.player && Number.isFinite(d.rating) && Number.isFinite(d.year)
