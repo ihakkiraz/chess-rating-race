@@ -9,10 +9,29 @@
 <body>
   <header>
     <h1>Chess Ratings — Bar Chart Race (MVP)</h1>
+    <p>Animated evolution of top chess players over time. Data loads automatically from <code>/data/chess_ratings.csv</code>.</p>
   </header>
 
   <main>
-    <p>Project initialized. UI, styling, and visualization logic will be added in later commits.</p>
+    <aside id="controls">
+      <section>
+        <h2>Controls</h2>
+        <button id="btnPlay" disabled>Play</button>
+        <button id="btnPause" disabled>Pause</button>
+        <button id="btnReset" disabled>Reset</button>
+      </section>
+
+      <section>
+        <h2>Year Scrubber (interaction)</h2>
+        <input id="yearSlider" type="range" min="0" max="0" value="0" step="1" disabled />
+        <div id="yearLabel">Year: —</div>
+      </section>
+    </aside>
+
+    <section id="viz">
+      <div id="yearBadge">—</div>
+      <svg id="chart"></svg>
+    </section>
   </main>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
