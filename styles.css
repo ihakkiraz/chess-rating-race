@@ -102,7 +102,7 @@ button:disabled {
   top: 20px;
   font-size: 48px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
   pointer-events: none;
 }
 
@@ -111,13 +111,10 @@ svg {
   height: 100%;
 }
 
-.bar {
-  fill: #7aa2ff;
-}
-
 .label {
   fill: var(--ink);
   font-size: 12px;
+  opacity: 1;
 }
 
 .value {
