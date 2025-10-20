@@ -68,6 +68,35 @@ function frameData(year) {
     .slice(0, state.topN);
 }
 
+// to normalize names for champions matching
+const norm = s => (s || "")
+  .toLowerCase()
+  .replace(/[.,]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const toFullName = s => {
+  const n = norm(s);
+  if (n.includes(",")) {
+    const [last, first] = n.split(",").map(t => t.trim());
+    return `${first} ${last}`.trim();
+  }
+  return n;
+};
+
+const lastName = s => {
+  const parts = norm(s).split(" ");
+  return parts[parts.length - 1] || "";
+};
+
+let CHAMPIONS_FULL = new Set();
+let CHAMPIONS_LAST = new Set();
+const isChampion = (name) => {
+  const full = toFullName(name);
+  if (CHAMPIONS_FULL.has(full)) return true;
+  return CHAMPIONS_LAST.has(lastName(name));
+};
+
 function render(year) {
   const data = frameData(year);
   const minX = 2000;
@@ -75,6 +104,9 @@ function render(year) {
   const maxX = rawMax * 1.05;   
   x.domain([minX, maxX]).nice();
   y.domain(data.map(d => d.player));
+  
+  const rowsThisYear = state.byYear.get(year) || [];
+  const rank1 = new Set(rowsThisYear.filter(r => r.worldRank === 1).map(r => r.player));
 
   const t = d3.transition().duration(700).ease(d3.easeCubicOut);
 
@@ -85,6 +117,29 @@ function render(year) {
   gy.transition(t)
     .call(d3.axisLeft(y).tickSizeInner(0).tickSizeOuter(0));
   gy.select(".domain").remove();
+
+  const ticks = gy.selectAll(".tick");
+
+  ticks.select("text")
+    .text(d => d)
+    .style("fill", "#e9edff")
+    .style("font-weight", 400);
+
+  ticks.filter(d => rank1.has(d))
+    .select("text")
+    .style("fill", "#FFD700")
+    .style("font-weight", 700);
+
+  ticks.select("path.crown").remove();
+  const crownPath = "M2 12 L6 6 L10 12 L14 8 L18 12 L18 16 L2 16 Z"; // simple crown shape
+  ticks.filter(d => isChampion(d))
+    .append("path")
+    .attr("class", "crown")
+    .attr("d", crownPath)
+    .attr("fill", "#FFD700")
+    .attr("stroke", "#7A5C00")
+    .attr("stroke-width", 0.8)
+    .attr("transform", "translate(-26,5) scale(0.7)");
 
   const bars = layerBars.selectAll(".bar").data(data, d => d.player);
 
@@ -107,7 +162,7 @@ function render(year) {
     .attr("x", 0)
     .attr("y", d => y(d.player))
     .attr("height", y.bandwidth())
-    .attr("width", d => x(prev.get(d.player)?.rating ?? 0))
+    .attr("width", d => x(prev.get(d.player)?.rating ?? minX))
     .attr("fill", d => color(d.player))
     .transition(t)
     .attr("width", d => x(d.rating));
@@ -126,12 +181,13 @@ function render(year) {
     .attr("x", d => x(d.rating) + 6)
     .attr("y", d => y(d.player) + y.bandwidth() / 2)
     .attr("dominant-baseline", "middle")
+    .attr("text-anchor", "start")
     .text(d => Math.round(d.rating));
 
   layerText.selectAll(".value").data(data, d => d.player)
     .enter().append("text")
     .attr("class", "value")
-    .attr("x", d => x(prev.get(d.player)?.rating ?? 0) + 6) // start near old x
+    .attr("x", d => x(prev.get(d.player)?.rating ?? minX) + 6) // start near old x
     .attr("y", d => y(d.player) + y.bandwidth() / 2)
     .attr("dominant-baseline", "middle")
     .attr("text-anchor", "start")
@@ -181,7 +237,13 @@ function reset() {
   syncUIToIndex(0);
 }
 
-d3.csv("data/chess_ratings.csv", parseRow).then(rows => {
+Promise.all([
+  d3.csv("data/chess_ratings.csv", parseRow),
+  d3.csv("data/world_champions.csv", d => ({ player: d.Player, dates: d.Dates }))
+]).then(([rows, champs]) => {
+  CHAMPIONS_FULL = new Set(champs.map(d => toFullName(d.player)));
+  CHAMPIONS_LAST = new Set(champs.map(d => lastName(d.player)));
+
   const clean = rows.filter(d =>
     d.player && Number.isFinite(d.rating) && Number.isFinite(d.year)
   );
@@ -200,13 +262,12 @@ d3.csv("data/chess_ratings.csv", parseRow).then(rows => {
   yearSlider.disabled = false;
 
   btnReset.disabled = false;
-  btnPlay.disabled = false;  
+  btnPlay.disabled = false;
   btnPause.disabled = true;
 
   syncUIToIndex(0);
 });
 
-// interactions
 yearSlider.addEventListener("input", () => {
   if (state.playing) pause();
   const i = +yearSlider.value;
