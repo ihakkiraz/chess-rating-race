@@ -144,4 +144,11 @@ d3.csv("data/chess_ratings.csv", parseRow).then(rows => {
 
   state.frameIndex = 0;
   render(years[0]);
+})
+yearSlider.addEventListener("input", () => {
+  const i = +yearSlider.value;
+  state.frameIndex = i;
+  const year = state.years[i];
+  render(year);
 });
+;
