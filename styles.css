@@ -135,3 +135,33 @@ svg {
   fill: var(--muted);
   font-size: 12px;
 }
+
+ol {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.5;
+}
+
+p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+div {
+  display: flex;
+  align-items: center; 
+  gap: 8px; 
+  margin-bottom: 8px;
+}
+
+#crown {
+  font-size: 16px;
+}
+
+#champion_text {
+  font-size: 13px;
+}
