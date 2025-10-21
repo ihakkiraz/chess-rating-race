@@ -30,6 +30,14 @@ const gy = g.append("g").attr("class", "axis y");
 const layerBars = g.append("g").attr("class", "layer-bars");
 const layerText = g.append("g").attr("class", "layer-text");
 
+// X axis label
+g.append("text")
+  .attr("class", "axis-label x")
+  .attr("x", innerW - 50)
+  .attr("y", innerH - 10)
+  .attr("text-anchor", "middle")
+  .text("Rating (Adjusted Elo)");
+
 const x = d3.scaleLinear().range([0, innerW]);
 const y = d3.scaleBand().range([0, innerH]).padding(0.12);
 const color = d3.scaleOrdinal(d3.schemePaired);

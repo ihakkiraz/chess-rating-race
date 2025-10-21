@@ -130,3 +130,8 @@ svg {
 .axis path {
   stroke: #ffffff22;
 }
+
+.axis-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
