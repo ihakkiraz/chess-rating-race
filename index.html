@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Chess Ratings — Bar Chart Race (MVP)</title>
+  <title>Chess Ratings — Bar Chart Race</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
-    <h1>Chess Rating of Top 10 Players by Year - Bar Chart Race (MVP)</h1>
+    <h1>Chess Rating of Top 10 Players by Year - Bar Chart Race</h1>
     <p>Animated evolution of top chess players over time. Ratings are adjusted.
   </header>
 
@@ -22,16 +22,26 @@
       </section>
 
       <section>
+        <h2>Animation Speed</h2>
+        <input id="speedSlider" type="range" min="0.25" max="4" value="1" step="0.25" />
+        <div id="speedLabel">Speed: 1.0x</div>
+      </section>
+
+      <section>
         <h2>Year Scrubber (interaction)</h2>
         <input id="yearSlider" type="range" min="0" max="0" value="0" step="1" disabled />
-        <div id="yearLabel">Year: —</div>
+        <div class="year-input-wrapper">
+          <span class="year-label">Year:</span>
+          <input id="yearInput" type="number" placeholder="—" disabled />
+        </div>
+        <div id="yearError" class="error-message"></div>
       </section>
 
       <section id="legend">
         <h2>Legend</h2>
         <div>
-          <span style="font-size: 16px;">👑</span>
-          <span style="font-size: 13px;">World Champion</span>
+          <span id ="crown">👑</span>
+          <span id ="champion_text">World Champion</span>
         </div>
         <p>
           The crown indicates the reigning World Chess Champion. The official title was established in 1886 with Wilhelm Steinitz as the first champion.
