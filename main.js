@@ -226,11 +226,13 @@ function render(year) {
   const maxX = rawMax * 1.05;
   x.domain([minX, maxX]).nice();
   y.domain(data.map(d => d.player));
-  
+
   const rowsThisYear = state.byYear.get(year) || [];
   const rank1 = new Set(rowsThisYear.filter(r => r.worldRank === 1).map(r => r.player));
 
-  const t = d3.transition().duration(700).ease(d3.easeCubicInOut);
+  // Scale transition duration with speed multiplier to prevent overlap
+  const transitionDuration = 700 / state.speedMultiplier;
+  const t = d3.transition().duration(transitionDuration).ease(d3.easeCubicInOut);
 
   gx.attr("transform", `translate(0,${innerH})`)
     .transition(t)
