@@ -57,37 +57,38 @@ g.append("text")
   .text("Rating (Adjusted Elo)");
 
 const x = d3.scaleLinear().range([0, innerW]);
-const y = d3.scaleBand().range([0, innerH]).padding(0.12);
+const y = d3.scaleBand().range([0, innerH]).padding(0.20);
 
 // Federation flag colors (arrays of colors to create striped patterns)
+// Direction refers to gradient direction: 'vertical' = horizontal stripes, 'horizontal' = vertical stripes
 const federationColors = {
-  'USSR': { colors: ['#C1272D', '#F9D616'], direction: 'horizontal', proportions: [75, 25] },  // Deep Soviet red, Hammer & sickle gold
-  'RUS': { colors: ['#FFFFFF', '#0039A6', '#D52B1E'], direction: 'horizontal' }, // White, Blue, Red
-  'USA': { colors: ['#B22234', '#FFFFFF', '#3C3B6E'], direction: 'horizontal', proportions: [40, 30, 30] }, // Red, White, Blue
-  'ENG': { colors: ['#FFFFFF', '#CE1124'], direction: 'vertical' }, // White, Red (vertical to distinguish from USSR)
-  'GER': { colors: ['#000000', '#DD0000', '#FFCE00'], direction: 'horizontal' }, // Black, Red, Gold
-  'FRA': { colors: ['#0055A4', '#FFFFFF', '#EF4135'], direction: 'vertical' }, // Blue, White, Red
-  'IND': { colors: ['#FF9933', '#FFFFFF', '#138808'], direction: 'horizontal' }, // Saffron, White, Green
-  'ESP': { colors: ['#C60B1E', '#FFC400', '#C60B1E'], direction: 'horizontal' }, // Red, Yellow, Red
-  'ITA': { colors: ['#009246', '#FFFFFF', '#CE2B37'], direction: 'vertical' }, // Green, White, Red
-  'AUT': { colors: ['#ED2939', '#FFFFFF', '#ED2939'], direction: 'horizontal' }, // Red, White, Red
-  'HUN': { colors: ['#CD2A3E', '#FFFFFF', '#436F4D'], direction: 'horizontal' }, // Red, White, Green
-  'POL': { colors: ['#FFFFFF', '#DC143C'], direction: 'horizontal' }, // White, Red
-  'CSK': { colors: ['#FFFFFF', '#11457E', '#D7141A'], direction: 'horizontal' }, // White, Blue, Red
-  'YUG': { colors: ['#0C4076', '#FFFFFF', '#DE000F'], direction: 'horizontal' }, // Blue, White, Red
-  'SWE': { colors: ['#006AA7', '#FECC00'], direction: 'horizontal' }, // Blue, Yellow
-  'NED': { colors: ['#AE1C28', '#FFFFFF', '#21468B'], direction: 'horizontal' }, // Red, White, Blue
-  'DEN': { colors: ['#C8102E', '#FFFFFF'], direction: 'horizontal' }, // Red, White
-  'SUI': { colors: ['#FF0000', '#FFFFFF'], direction: 'horizontal' }, // Red, White
-  'ISR': { colors: ['#FFFFFF', '#0038B8', '#FFFFFF'], direction: 'horizontal' }, // White, Blue, White
-  'UKR': { colors: ['#0057B7', '#FFD700'], direction: 'horizontal' }, // Blue, Yellow
-  'ARM': { colors: ['#D90012', '#0033A0', '#F2A800'], direction: 'horizontal' }, // Red, Blue, Orange
-  'BUL': { colors: ['#FFFFFF', '#00966E', '#D62612'], direction: 'horizontal' }, // White, Green, Red
-  'CUB': { colors: ['#002A8F', '#FFFFFF', '#CF142B'], direction: 'horizontal' }, // Blue, White, Red
-  'ARG': { colors: ['#74ACDF', '#FFFFFF', '#74ACDF'], direction: 'horizontal' }, // Blue, White, Blue
-  'BRA': { colors: ['#009C3B', '#FFDF00', '#002776'], direction: 'horizontal' }, // Green, Yellow, Blue
-  'MEX': { colors: ['#006847', '#FFFFFF', '#CE1126'], direction: 'vertical' }, // Green, White, Red
-  'LAT': { colors: ['#9E3039', '#FFFFFF', '#9E3039'], direction: 'horizontal' }, // Red, White, Red
+  'USSR': { colors: ['#C1272D', '#F9D616'], direction: 'vertical', proportions: [75, 25] },  // Deep Soviet red, Hammer & sickle gold (horizontal stripes)
+  'RUS': { colors: ['#FFFFFF', '#0039A6', '#D52B1E'], direction: 'vertical' }, // White, Blue, Red (horizontal stripes)
+  'USA': { colors: ['#B22234', '#FFFFFF', '#3C3B6E'], direction: 'vertical', proportions: [40, 30, 30] }, // Red, White, Blue (horizontal stripes)
+  'ENG': { colors: ['#FFFFFF', '#CE1124'], direction: 'vertical' }, // White, Red (St. George's Cross - horizontal representation)
+  'GER': { colors: ['#000000', '#DD0000', '#FFCE00'], direction: 'vertical' }, // Black, Red, Gold (horizontal stripes)
+  'FRA': { colors: ['#0055A4', '#FFFFFF', '#EF4135'], direction: 'horizontal' }, // Blue, White, Red (vertical stripes)
+  'IND': { colors: ['#FF9933', '#FFFFFF', '#138808'], direction: 'vertical' }, // Saffron, White, Green (horizontal stripes)
+  'ESP': { colors: ['#C60B1E', '#FFC400', '#C60B1E'], direction: 'vertical' }, // Red, Yellow, Red (horizontal stripes)
+  'ITA': { colors: ['#009246', '#FFFFFF', '#CE2B37'], direction: 'horizontal' }, // Green, White, Red (vertical stripes)
+  'AUT': { colors: ['#ED2939', '#FFFFFF', '#ED2939'], direction: 'vertical' }, // Red, White, Red (horizontal stripes)
+  'HUN': { colors: ['#CD2A3E', '#FFFFFF', '#436F4D'], direction: 'vertical' }, // Red, White, Green (horizontal stripes)
+  'POL': { colors: ['#FFFFFF', '#DC143C'], direction: 'vertical' }, // White, Red (horizontal stripes)
+  'CSK': { colors: ['#FFFFFF', '#11457E', '#D7141A'], direction: 'vertical' }, // White, Blue, Red (horizontal stripes with triangle)
+  'YUG': { colors: ['#0C4076', '#FFFFFF', '#DE000F'], direction: 'vertical' }, // Blue, White, Red (horizontal stripes)
+  'SWE': { colors: ['#006AA7', '#FECC00'], direction: 'vertical' }, // Blue, Yellow (Nordic cross - horizontal representation)
+  'NED': { colors: ['#AE1C28', '#FFFFFF', '#21468B'], direction: 'vertical' }, // Red, White, Blue (horizontal stripes)
+  'DEN': { colors: ['#C8102E', '#FFFFFF'], direction: 'vertical' }, // Red, White (Nordic cross - horizontal representation)
+  'SUI': { colors: ['#FF0000', '#FFFFFF'], direction: 'vertical' }, // Red, White (Swiss cross - horizontal representation)
+  'ISR': { colors: ['#FFFFFF', '#0038B8', '#FFFFFF'], direction: 'vertical' }, // White, Blue, White (horizontal stripes with Star of David)
+  'UKR': { colors: ['#0057B7', '#FFD700'], direction: 'vertical' }, // Blue, Yellow (horizontal stripes)
+  'ARM': { colors: ['#D90012', '#0033A0', '#F2A800'], direction: 'vertical' }, // Red, Blue, Orange (horizontal stripes)
+  'BUL': { colors: ['#FFFFFF', '#00966E', '#D62612'], direction: 'vertical' }, // White, Green, Red (horizontal stripes)
+  'CUB': { colors: ['#002A8F', '#FFFFFF', '#CF142B'], direction: 'vertical' }, // Blue, White, Red (horizontal stripes with triangle)
+  'ARG': { colors: ['#74ACDF', '#FFFFFF', '#74ACDF'], direction: 'vertical' }, // Blue, White, Blue (horizontal stripes)
+  'BRA': { colors: ['#009C3B', '#FFDF00', '#002776'], direction: 'vertical' }, // Green, Yellow, Blue (diamond on field - horizontal representation)
+  'MEX': { colors: ['#006847', '#FFFFFF', '#CE1126'], direction: 'horizontal' }, // Green, White, Red (vertical stripes)
+  'LAT': { colors: ['#9E3039', '#FFFFFF', '#9E3039'], direction: 'vertical' }, // Red, White, Red (horizontal stripes)
 };
 
 // Player to federation mapping
@@ -229,7 +230,7 @@ function render(year) {
   const rowsThisYear = state.byYear.get(year) || [];
   const rank1 = new Set(rowsThisYear.filter(r => r.worldRank === 1).map(r => r.player));
 
-  const t = d3.transition().duration(700).ease(d3.easeCubicOut);
+  const t = d3.transition().duration(700).ease(d3.easeCubicInOut);
 
   gx.attr("transform", `translate(0,${innerH})`)
     .transition(t)
